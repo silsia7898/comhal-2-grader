@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>컴퓨터활용능력 2급 실기 채점프로그램</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <!-- SheetJS & JSZip for real Excel parsing and sample file/ZIP generation -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" defer></script>
+  <script src="data.js" defer></script>
+  <script src="grader.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <!-- Top Navigation Bar -->
+  <header class="top-navbar">
+    <div class="container navbar-inner">
+      <nav class="nav-links" aria-label="주 메뉴">
+        <a href="#" class="nav-item active" id="navHome">
+          <svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 3l9 8h-3v9h-5v-6H11v6H6v-9H3l9-8z"/>
+          </svg>
+          <span>채점프로그램 Home</span>
+        </a>
+        <button type="button" class="nav-item nav-btn" id="navMockExam">
+          <svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+          </svg>
+          <span>모의문제 풀기</span>
+        </button>
+        <a href="auto_grader.html" class="nav-item">
+          <svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+          </svg>
+          <span>정답비교 채점</span>
+        </a>
+        <button type="button" class="nav-item nav-btn" id="navHelp">
+          <svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+          </svg>
+          <span>도움말</span>
+        </button>
+      </nav>
+      <div class="navbar-right">
+        <span class="timer-pill hidden" id="navbarTimerBadge" title="시험 타이머">
+          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="9"></circle>
+            <polyline points="12 7 12 12 15 14"></polyline>
+          </svg>
+          <span id="navbarTimerText">40:00</span>
+        </span>
+        <button type="button" class="nav-auth-btn" id="openLoginBtn">로그인 / 회원가입</button>
+        <div class="nav-user-wrap hidden" id="navUserWrap">
+          <button type="button" class="nav-user-pill" id="myHistoryBtn" title="내 점수 기록 보기">
+            <span id="navUserLabel">학생</span>
+          </button>
+          <button type="button" class="nav-logout-btn" id="logoutBtn">로그아웃</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container main-wrapper">
+    <!-- Top Notice Banner Card -->
+    <section class="card notice-card" id="noticeBanner" aria-label="사이트 유의사항">
+      <button type="button" class="notice-close" id="closeNoticeBtn" aria-label="유의사항 닫기" title="닫기">×</button>
+      <div class="notice-content">
+        <div class="book-cover" aria-hidden="true">
+          <div class="book-cover-top">
+            <span class="book-tag">이기적</span>
+            <span class="book-year">2026</span>
+          </div>
+          <div class="book-cover-art">
+            <svg viewBox="0 0 80 60" class="lotus-svg">
+              <defs>
+                <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#dbeafe"/>
+                  <stop offset="100%" stop-color="#93c5fd"/>
+                </linearGradient>
+              </defs>
+              <rect width="80" height="60" rx="4" fill="url(#waterGrad)"/>
+              <ellipse cx="40" cy="46" rx="28" ry="8" fill="#86efac" opacity="0.75"/>
+              <path d="M40 16 C35 26, 32 34, 40 40 C48 34, 45 26, 40 16 Z" fill="#f9a8d4"/>
+              <path d="M40 22 C30 26, 26 35, 38 40 C36 33, 37 26, 40 22 Z" fill="#fbcfe8"/>
+              <path d="M40 22 C50 26, 54 35, 42 40 C44 33, 43 26, 40 22 Z" fill="#fbcfe8"/>
+            </svg>
+          </div>
+          <div class="book-cover-title">
+            <div class="book-main-title">컴퓨터활용능력</div>
+            <div class="book-sub-title">2급 실기</div>
+          </div>
+        </div>
+
+        <div class="notice-text-wrap">
+          <h2 class="notice-title">
+            <svg class="icon-info" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+            </svg>
+            사이트 유의사항
+          </h2>
+          <p class="notice-desc">
+            본 사이트는 컴퓨터활용능력 2급 실기 연습 및 자동 채점을 지원하는 웹 채점프로그램입니다.
+            교재 및 모의고사에서 제공하는 기준과 동일한 방식으로 작업별 감점 내역과 상세 분석 결과를 제공합니다.
+            채점할 엑셀 파일(<code>.xlsx</code>, <code>.xlsm</code>)을 업로드하거나 샘플 파일로 바로 채점을 테스트해 보세요.
+          </p>
+          <p class="notice-sub">※ 채점 기준 및 정답 오류 문의는 도움말의 안내 사항을 참고 부탁드립니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main 2-Column Workspace -->
+    <section class="workspace-grid">
+      <!-- Left Column -->
+      <div class="left-column">
+        <!-- Card 1: 문제 유형 선택 -->
+        <div class="card panel-card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <svg class="icon-header blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <line x1="8" y1="6" x2="21" y2="6"></line>
+                <line x1="8" y1="12" x2="21" y2="12"></line>
+                <line x1="8" y1="18" x2="21" y2="18"></line>
+                <circle cx="4" cy="6" r="1.2" fill="currentColor"></circle>
+                <circle cx="4" cy="12" r="1.2" fill="currentColor"></circle>
+                <circle cx="4" cy="18" r="1.2" fill="currentColor"></circle>
+              </svg>
+              <h2>문제 유형 선택</h2>
+            </div>
+            <button type="button" class="icon-btn-clock" id="toggleTimerBtn" title="40분 실전 타이머 시작/일시정지" aria-label="40분 실전 타이머">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22">
+                <path d="M12 2a10 10 0 1010 10A10 10 0 0012 2zm1 10.41l3.29 3.3-1.42 1.41L11 13.24V7h2z"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="form-grid">
+            <label class="form-label" for="roundSelect">회차 선택</label>
+            <div class="form-control">
+              <select id="roundSelect" class="select-input">
+                <!-- Populated by app.js -->
+              </select>
+            </div>
+
+            <span class="form-label">문제 파일</span>
+            <div class="form-control btn-pair">
+              <button type="button" class="btn btn-outline" id="downloadRoundBtn">
+                <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                해당회차 다운
+              </button>
+              <button type="button" class="btn btn-outline" id="downloadAllBtn">
+                <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                </svg>
+                전체 다운 (ZIP)
+              </button>
+            </div>
+
+            <span class="form-label">정보 입력</span>
+            <div class="form-control input-pair">
+              <input type="text" id="teacherIdInput" class="text-input" placeholder="선생님 ID" maxlength="20" />
+              <input type="text" id="studentNameInput" class="text-input" placeholder="학생 닉네임" maxlength="20" />
+            </div>
+
+            <span class="form-label align-top">작성 파일</span>
+            <div class="form-control">
+              <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="채점할 파일 선택 또는 드래그 앤 드롭">
+                <input type="file" id="fileInput" accept=".xlsx,.xlsm,.xls" hidden />
+                <div class="dropzone-content" id="dropzoneContent">
+                  <svg class="icon-upload" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+                  </svg>
+                  <span id="dropzoneText">채점할 파일 선택</span>
+                </div>
+              </div>
+              <div class="sample-helper">
+                <button type="button" class="link-btn" id="loadSampleBtn">샘플 답안 파일 불러오기</button>
+                <span class="dot-sep">·</span>
+                <button type="button" class="link-btn" id="clearFileBtn" hidden>파일 초기화</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-footer">
+            <div class="queue-badge">
+              <span>대기자</span>
+              <span class="queue-count" id="queueCount">0</span>
+            </div>
+            <div class="action-group">
+              <button type="button" class="btn btn-success" id="startGradeBtn">
+                <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                채점시작
+              </button>
+              <button type="button" class="btn btn-outline" id="printBtn">
+                <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                  <rect x="6" y="14" width="12" height="8"></rect>
+                </svg>
+                인쇄
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: 작업별 상세 점수 -->
+        <div class="card score-card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <svg class="icon-header green" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zm0 13.09L4.5 12v4.5c0 2.21 3.36 4 7.5 4s7.5-1.79 7.5-4V12L12 16.09z"/>
+              </svg>
+              <h2>작업별 상세 점수</h2>
+            </div>
+          </div>
+
+          <div class="score-rows">
+            <div class="score-row">
+              <span class="problem-badge">문제1</span>
+              <div class="task-name-box">기본작업(20점)</div>
+              <div class="task-score-box" id="scoreTask1">-</div>
+            </div>
+            <div class="score-row">
+              <span class="problem-badge">문제2</span>
+              <div class="task-name-box">계산작업(40점)</div>
+              <div class="task-score-box" id="scoreTask2">-</div>
+            </div>
+            <div class="score-row">
+              <span class="problem-badge">문제3</span>
+              <div class="task-name-box">분석작업(20점)</div>
+              <div class="task-score-box" id="scoreTask3">-</div>
+            </div>
+            <div class="score-row">
+              <span class="problem-badge">문제4</span>
+              <div class="task-name-box">기타작업(20점)</div>
+              <div class="task-score-box" id="scoreTask4">-</div>
+            </div>
+          </div>
+
+          <div class="total-score-banner">
+            <div class="total-score-label">TOTAL SCORE</div>
+            <div class="total-score-value">
+              <span id="totalScoreValue">0</span> <span class="total-unit">점</span>
+            </div>
+            <div class="pass-badge hidden" id="passStatusBadge"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: 감점 내역 및 분석 -->
+      <div class="right-column">
+        <div class="card analysis-card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <svg class="icon-header orange" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+              </svg>
+              <h2>감점 내역 및 분석</h2>
+            </div>
+            <div class="stat-pills">
+              <span class="stat-pill blue">
+                <svg class="icon-xs" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
+                인원: <strong id="participantCount">2103</strong>명
+              </span>
+              <span class="stat-pill green">
+                <svg class="icon-xs" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/>
+                </svg>
+                평균: <strong id="averageScore">39.01</strong>점
+              </span>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="deduction-table">
+              <thead>
+                <tr>
+                  <th class="col-num">문제번호</th>
+                  <th class="col-task">작업내용</th>
+                  <th class="col-deduct">감점</th>
+                  <th class="col-detail">오류 상세내용</th>
+                </tr>
+              </thead>
+              <tbody id="deductionTableBody">
+                <!-- Populated by app.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Middle Action Buttons -->
+    <section class="mid-actions" aria-label="추가 기능">
+      <button type="button" class="btn btn-primary btn-mid" id="openMockExamBtn">
+        <svg class="icon-sm" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+        </svg>
+        모의문제 풀기
+      </button>
+      <button type="button" class="btn btn-outline btn-mid" id="openStatsBtn">
+        <svg class="icon-sm" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/>
+        </svg>
+        점수별 통계보기
+      </button>
+      <button type="button" class="btn btn-danger btn-mid" id="openVideoBtn">
+        <svg class="icon-sm" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+        </svg>
+        동영상 강좌
+      </button>
+    </section>
+
+    <!-- Bottom 2-Column Leaderboard Charts -->
+    <section class="rankings-grid">
+      <div class="card ranking-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <svg class="icon-header gold" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0 0 11 15.9V19H7v2h10v-2h-4v-3.1a5.01 5.01 0 0 0 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/>
+            </svg>
+            <h2>학생 누적점수 순위</h2>
+          </div>
+        </div>
+        <div class="chart-wrap" id="studentRankingChart"></div>
+      </div>
+
+      <div class="card ranking-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <svg class="icon-header blue" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2l2.39 4.84 5.34.78-3.87 3.77.91 5.32L12 14.2l-4.77 2.51.91-5.32L4.27 7.62l5.34-.78L12 2z"/>
+            </svg>
+            <h2>선생님 누적점수 순위</h2>
+          </div>
+        </div>
+        <div class="chart-wrap" id="teacherRankingChart"></div>
+      </div>
+    </section>
+
+    <!-- Bottom Green Promotional Banner -->
+    <section class="promo-banner" aria-label="스터디 커뮤니티 배너">
+      <div class="promo-inner">
+        <div class="medals-group" aria-hidden="true">
+          <div class="medal-item">
+            <div class="ribbon"></div>
+            <div class="medal-circle"><span>1위</span></div>
+          </div>
+          <div class="medal-item">
+            <div class="ribbon"></div>
+            <div class="medal-circle"><span>1위</span></div>
+          </div>
+          <div class="medal-item">
+            <div class="ribbon"></div>
+            <div class="medal-circle"><span>1위</span></div>
+          </div>
+          <div class="medal-item">
+            <div class="ribbon"></div>
+            <div class="medal-circle"><span>1위</span></div>
+          </div>
+        </div>
+        <div class="promo-text">
+          <div class="promo-brand">이기적</div>
+          <div class="promo-title">스터디카페</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>© 2026 · 컴퓨터활용능력 2급 실기 자동채점 프로그램</p>
+  </footer>
+
+  <!-- Modal Overlay -->
+  <div class="modal-overlay hidden" id="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modalTitle">제목</h3>
+        <button type="button" class="modal-close" id="modalCloseBtn" aria-label="닫기">×</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+</body>
+</html>
